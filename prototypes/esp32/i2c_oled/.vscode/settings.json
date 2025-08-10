@@ -1,0 +1,8 @@
+{
+  "C_Cpp.intelliSenseEngine": "default",
+  "idf.espIdfPath": "/home/fste/esp/v5.5/esp-idf",
+  "idf.toolsPath": "/home/fste/.espressif",
+  "idf.pythonInstallPath": "/usr/bin/python3",
+  "idf.flashType": "UART",
+  "idf.port": "/dev/ttyUSB0"
+}
