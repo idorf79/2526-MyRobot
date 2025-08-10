@@ -15,6 +15,8 @@ This example shows how to make use of the SSD1306 panel driver from `esp_lcd` co
 * An SSD1306 OLED LCD, with I2C interface
 * An USB cable for power supply and programming
 
+For this prototype a Wemos ESP32 development board was used. The pins for I2C are hardcoded (SCL = 4 , SDA = 5)
+
 ### Hardware Connection
 
 The connection between ESP Board and the LCD is as follows:
