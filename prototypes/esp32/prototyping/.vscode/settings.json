@@ -1,14 +1,13 @@
 {
   "C_Cpp.intelliSenseEngine": "default",
-  "idf.espIdfPath": "/Users/frodi/esp/v5.1.6/esp-idf",
+  "idf.espIdfPath": "/home/fste/esp/v5.5/esp-idf",
   "idf.pythonInstallPath": "/usr/bin/python3",
-  "idf.espAdfPath": "/Users/frodi/esp/esp-adf-v2.7",
   "idf.openOcdConfigs": [
     "interface/ftdi/esp32_devkitj_v1.cfg",
     "target/esp32.cfg"
   ],
-  "idf.port": "/dev/tty.usbserial-0001",
-  "idf.toolsPath": "/Users/frodi/.espressif",
+  "idf.port": "/dev/ttyUSB0",
+  "idf.toolsPath": "/home/fste/.espressif",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32"
   },
