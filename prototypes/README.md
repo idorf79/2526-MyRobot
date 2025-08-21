@@ -44,3 +44,7 @@ Make sure the `CMakeLists.txt` on the project level reflects the correct path to
 ```
 set(EXTRA_COMPONENT_DIRS /home/fste/esp/esp-idf-lib/components)
 ```
+=======
+# Prototype folder
+
+This folder contains some prototypes made during the project.
