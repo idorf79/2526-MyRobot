@@ -41,7 +41,6 @@
 #include <rcl/error_handling.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
-
 #include <std_msgs/msg/int32.h>
 
 #if !defined(ESP32) && !defined(TARGET_PORTENTA_H7_M7) && !defined(ARDUINO_NANO_RP2040_CONNECT) && !defined(ARDUINO_WIO_TERMINAL)
@@ -64,8 +63,7 @@
 // Set Board to: LoLin S3 Mini
 // Docker command to run on macbook:
 // docker run -it --rm -p 8888:8888/udp microros/micro-ros-agent:humble udp4 -p 8888 -v 6
-
-
+// docker run -it --net=host microros/micro-ros-agent:jazzy udp4 -p 8888 -v 6
 AHT20 aht20;
 
 #define LEDSTRIP_DIN 42  // This is the Data in pin for the LEDs, and should not be changed
@@ -78,6 +76,10 @@ float humidity = 0.0;
 float temperature = -14.9;
 bool showTemperature = true;
 
+
+
+uint16_t connectionDot = matrix.Color(0, 0, 255);
+
 rcl_publisher_t publisher;
 std_msgs__msg__Int32 msg;
 rclc_support_t support;
@@ -87,6 +89,7 @@ rcl_node_t node;
 void error_loop() {
   while (1) {
     //    digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+    connectionDot = matrix.Color(255, 0, 0);
     delay(100);
   }
 }
@@ -138,6 +141,9 @@ void vTaskupdateMatrix(void* pvParameters) {
       matrix.print(" RH %");
       showTemperature = true;
     }
+
+    matrix.drawPixel(28, 4, connectionDot);
+
     matrix.show();  // Update matrix
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(5000));
   }
@@ -163,16 +169,23 @@ void vMicroRosAlivePublisher(void* pvParameters) {
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
     "temperature"));
-
   msg.data = 0;
-
+  connectionDot = matrix.Color(0, 255, 0);
   xLastWakeTime = xTaskGetTickCount();
 
   while (true) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(5000));
-    // Publish to the topic here
-    RCSOFTCHECK(rcl_publish(&publisher, &msg, NULL));
-    msg.data = temperature * 100;
+
+    if (rmw_uros_ping_agent(100,1) == RMW_RET_OK) {
+      msg.data = temperature * 100;
+      // Publish to the topic here
+      RCSOFTCHECK(rcl_publish(&publisher, &msg, NULL));
+      connectionDot = matrix.Color(0,255,0);
+    }
+    else
+    {
+      connectionDot = matrix.Color(255,0,0);
+    }
   }
 }
 
