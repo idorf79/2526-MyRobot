@@ -17,6 +17,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
+#include <geometry_msgs/msg/twist.hpp>
 
 using std::placeholders::_1;
 
@@ -26,16 +27,16 @@ public:
   MinimalSubscriber()
   : Node("minimal_subscriber")
   {
-    subscription_ = this->create_subscription<std_msgs::msg::String>(
-      "topic", 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
+    subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
+      "cmd_vel", 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
   }
 
 private:
-  void topic_callback(const std_msgs::msg::String & msg) const
+  void topic_callback(const geometry_msgs::msg::Twist & msg) const
   {
-    RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg.data.c_str());
+    RCLCPP_INFO(this->get_logger(), "I heard: '%f'", msg.angular.z);
   }
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_;
 };
 
 int main(int argc, char * argv[])
