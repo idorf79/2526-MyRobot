@@ -21,6 +21,8 @@
 
 using std::placeholders::_1;
 
+float previous_angular_z = 0;
+
 class MinimalSubscriber : public rclcpp::Node
 {
 public:
@@ -34,7 +36,23 @@ public:
 private:
   void topic_callback(const geometry_msgs::msg::Twist & msg) const
   {
-    RCLCPP_INFO(this->get_logger(), "I heard: '%f'", msg.angular.z);
+    if (previous_angular_z != (float)msg.angular.z)
+    {
+      if (msg.angular.z == 0)
+      {
+        RCLCPP_INFO(this->get_logger(), "Going Straight : %f %f", previous_angular_z, msg.angular.z);
+      }
+      else if (msg.angular.z > 0)
+      {
+        RCLCPP_INFO(this->get_logger(), "Going Left : %f %f", previous_angular_z, msg.angular.z);
+      }
+      else
+      {
+        RCLCPP_INFO(this->get_logger(), "Going Right : %f %f", previous_angular_z, msg.angular.z);
+      }
+
+      previous_angular_z = (float)msg.angular.z;
+    }
   }
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_;
 };
