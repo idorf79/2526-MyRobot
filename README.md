@@ -8,3 +8,7 @@ Since the robot will contain an ESP32 at some point, and I like to experiment, s
 [ESP32 Prototyping](prototypes/esp32/prototyping/README.md)
 
 
+## Prototyping Dev PC
+[Development PC Prototyping](prototypes/dev_pc/prototyping/README.md)
+
+
