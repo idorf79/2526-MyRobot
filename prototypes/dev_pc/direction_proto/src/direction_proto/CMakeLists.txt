@@ -8,7 +8,6 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
@@ -27,7 +26,7 @@ if(BUILD_TESTING)
 endif()
 
 add_executable(listener src/subscriber_member_function.cpp)
-ament_target_dependencies(listener rclcpp std_msgs geometry_msgs)
+ament_target_dependencies(listener rclcpp geometry_msgs)
 
 install(TARGETS
   listener
