@@ -20,7 +20,7 @@
 
 using std::placeholders::_1;
 
-float previous_angular_z = 0;
+double previous_angular_z = 0;
 
 class MinimalSubscriber : public rclcpp::Node
 {
@@ -39,7 +39,7 @@ private:
   {
     // TODO: now only log output is given with this direction
     // Perhaps sending the direction on a new topic?
-    if (previous_angular_z != (float)msg.angular.z)
+    if (previous_angular_z != msg.angular.z)
     {
       if (msg.angular.z == 0)
       {
@@ -54,7 +54,7 @@ private:
         RCLCPP_INFO(this->get_logger(), "Going Right : %f %f", previous_angular_z, msg.angular.z);
       }
 
-      previous_angular_z = (float)msg.angular.z;
+      previous_angular_z = msg.angular.z;
     }
   }
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_;
