@@ -30,11 +30,15 @@ public:
   {
     subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
       "cmd_vel", 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
+
+      // TODO: use other topics, maybe even make this configurable?
   }
 
 private:
   void topic_callback(const geometry_msgs::msg::Twist & msg) const
   {
+    // TODO: now only log output is given with this direction
+    // Perhaps sending the direction on a new topic?
     if (previous_angular_z != (float)msg.angular.z)
     {
       if (msg.angular.z == 0)
