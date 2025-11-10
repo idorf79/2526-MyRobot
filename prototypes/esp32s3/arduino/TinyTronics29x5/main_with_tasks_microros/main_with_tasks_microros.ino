@@ -63,7 +63,11 @@
 // Set Board to: LoLin S3 Mini
 // Docker command to run on macbook:
 // docker run -it --rm -p 8888:8888/udp microros/micro-ros-agent:humble udp4 -p 8888 -v 6
+
+// Docker command to run on Linux:
 // docker run -it --net=host microros/micro-ros-agent:jazzy udp4 -p 8888 -v 6
+
+
 AHT20 aht20;
 
 #define LEDSTRIP_DIN 42  // This is the Data in pin for the LEDs, and should not be changed
@@ -153,7 +157,7 @@ void vMicroRosAlivePublisher(void* pvParameters) {
 
   TickType_t xLastWakeTime;
 
-  set_microros_wifi_transports("robot-lan", "robot-lan-2024!", "192.168.0.100", 8888);
+  set_microros_wifi_transports("robot-lan", "robot-lan-2024!", "192.168.0.102", 8888);
 
   allocator = rcl_get_default_allocator();
 

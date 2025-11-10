@@ -65,6 +65,12 @@
 // Docker command to run on macbook:
 // docker run -it --rm -p 8888:8888/udp microros/micro-ros-agent:humble udp4 -p 8888 -v 6
 
+// Docker command to run on Linux:
+// docker run -it --net=host microros/micro-ros-agent:jazzy udp4 -p 8888 -v 6
+
+// ROS2 command to publish a topic to "test_topic" (which takes a Int32):
+// ros2 topic pub /test_topic std_msgs/msg/Int32 "data: 1" --once
+
 
 AHT20 aht20;
 
@@ -97,7 +103,7 @@ void error_loop() {
 
 void vInitMicroROS() {
 
-  set_microros_wifi_transports("robot-lan", "robot-lan-2024!", "192.168.0.100", 8888);
+  set_microros_wifi_transports("robot-lan", "robot-lan-2024!", "192.168.0.102", 8888);
 
   allocator = rcl_get_default_allocator();
 
