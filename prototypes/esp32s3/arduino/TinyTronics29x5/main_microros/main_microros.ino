@@ -90,6 +90,10 @@ bool toggleModeActive = true;
 uint16_t connectionDot = matrix.Color(0, 0, 255);
 uint16_t commandDot = matrix.Color(255, 0, 255);
 
+const uint16_t updateDotOnColor = matrix.Color(255, 255, 255);
+const uint16_t updateDotOffColor = matrix.Color(0, 0, 0);
+uint16_t updateDot = updateDotOnColor;
+bool updateDotOnState = true;
 
 rcl_publisher_t publisher;
 rcl_subscription_t subscriber;
@@ -137,6 +141,13 @@ void vTaskupdateTemperatureAndHumidity(void* pvParameters) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(5000));
     if (toggleModeActive)
       showTemperature = !showTemperature;
+
+    if (updateDotOnState)
+      updateDot = updateDotOnColor;
+    else
+      updateDot = updateDotOffColor;
+    
+    updateDotOnState = !updateDotOnState;
   }
 }
 
@@ -171,8 +182,9 @@ void vTaskupdateMatrix(void* pvParameters) {
       matrix.print(" RH %");
     }
 
-    matrix.drawPixel(28, 4, connectionDot);
     matrix.drawPixel(28, 0, commandDot);
+    matrix.drawPixel(28, 2, updateDot);
+    matrix.drawPixel(28, 4, connectionDot);
 
     matrix.show();  // Update matrix
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(40));
