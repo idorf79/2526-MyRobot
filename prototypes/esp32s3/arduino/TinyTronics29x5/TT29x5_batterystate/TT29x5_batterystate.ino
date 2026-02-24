@@ -75,8 +75,8 @@
 // Docker command to run on Linux:
 // docker run -it --net=host microros/micro-ros-agent:jazzy udp4 -p 8888 -v 6
 
-// ROS2 command to publish a topic to "test_topic" (which takes a Int32):
-// ros2 topic pub /command std_msgs/msg/Int32 "data: 1" --once
+// ROS2 command to publish a topic to "battery_state" (which takes a Float32):
+// ros2 topic pub /battery_state std_msgs/msg/Float32 "data: 12.3" --once
 
 AHT20 aht20;
 
@@ -138,7 +138,7 @@ void vInitMicroROS()
   RCCHECK(rclc_node_init_default(&node, "micro_ros_tinyt_29x5_node", "", &support));
 
   // create subscriber
-  const char *topic_name = "test";
+  const char *topic_name = "battery_state";
 
   RCCHECK(rclc_subscription_init_default(
       &subscriber,
@@ -164,7 +164,7 @@ void vTaskupdateMatrix(void *pvParameters)
   TickType_t xLastWakeTime;
 
   matrix.begin();
-  matrix.setBrightness(10);  // Turn down brightness to about 50%
+  matrix.setBrightness(50);  // Turn down brightness to about 50%
   matrix.setFont(&TomThumb); // TomThumb font (3x5 pixels)
 
   xLastWakeTime = xTaskGetTickCount();
@@ -239,12 +239,14 @@ void vInitSubscriber()
 void setup()
 {
 
+  xTaskCreatePinnedToCore(vTaskupdateMatrix, "updateMatrix", 5000, NULL, 10, NULL, 1);
+
+
   vInitMicroROS();
 
   vInitSubscriber();
 
   xTaskCreatePinnedToCore(vTaskRosConnectionCheck, "uRosAlivePublisher", 5000, NULL, 10, NULL, 0);
-  xTaskCreatePinnedToCore(vTaskupdateMatrix, "updateMatrix", 5000, NULL, 10, NULL, 1);
 }
 
 void loop()
