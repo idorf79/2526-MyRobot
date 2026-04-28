@@ -1,0 +1,65 @@
+scan_to_scan_filter_chain:
+  ros__parameters:
+      filter1:
+        name: angle
+        type: laser_filters/LaserScanAngularBoundsFilterInPlace
+        params:
+          lower_angle: -0.44
+          upper_angle: 0.44
+      # filter1:
+      #   name: angle2
+      #   type: laser_filters/LaserScanAngularBoundsFilter
+      #   params:
+      #     lower_angle: -1.57 #-1.57 # -90 degrees
+      #     upper_angle: 1.57 #1.57  # 90 degrees
+      # filter3:
+      #   name: range
+      #   type: laser_filters/LaserScanRangeFilter
+      #   params:
+      #     use_message_range_limits: false
+      #     lower_range: 0.1
+      #     upper_range: 5.0
+
+      ## Cannot be combined with LaserScanAngularBoundsFilter:
+      filter2:
+        name: range
+        type: laser_filters/LaserScanMaskFilter
+        params:
+        # Indices of beams to mask out (set to max_range)
+          masks:
+            laser:
+            - 350.
+            - 351.
+            - 352.
+            - 353.
+            - 354.
+            - 355.
+            - 356.
+            - 357.
+            - 358.
+            # - 359.
+            # - 0.
+            - 1.
+            - 2.
+            - 3.
+            - 4.
+            - 5.
+            - 6.
+            - 7.
+            - 8.
+            - 9.
+            # - 87.
+            # - 88.
+            # - 89.
+            # - 90.
+            # - 91.
+            # - 92.
+            - 175.
+            - 176.
+            - 177.
+            - 178.
+            - 179.
+            - 180.
+            
+            
+            
