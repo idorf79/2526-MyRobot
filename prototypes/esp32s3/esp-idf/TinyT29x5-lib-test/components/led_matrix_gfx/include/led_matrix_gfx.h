@@ -23,14 +23,17 @@ typedef struct {
 #define LM_BLUE    LM_COLOR(0, 0, 255)
 
 // How the single LED strip is physically wired into the width x height grid.
+// The strip either runs in complete ROWS (each traversal is `width` pixels
+// long, then jumps to the next row) or complete COLUMNS (each traversal is
+// `height` pixels long, then jumps to the next column) -- and within that,
+// either every traversal goes the same direction, or direction alternates
+// (serpentine / boustrophedon), which is by far the most common wiring for
+// a hand-built single-strip panel.
 typedef enum {
-    // Every row is wired in the same direction (left->right), i.e. you
-    // physically start each new row back on the left edge.
-    LM_LAYOUT_ROW_MAJOR,
-    // Rows alternate direction (boustrophedon / "zigzag"). This is the
-    // usual wiring when a single continuous strip snakes through a panel,
-    // e.g. row 0 goes left->right, row 1 right->left, row 2 left->right...
-    LM_LAYOUT_SERPENTINE,
+    LM_LAYOUT_ROWS,               // rows, all same direction
+    LM_LAYOUT_ROWS_SERPENTINE,    // rows, alternating direction (zigzag)
+    LM_LAYOUT_COLUMNS,            // columns, all same direction
+    LM_LAYOUT_COLUMNS_SERPENTINE, // columns, alternating direction (zigzag)
 } lm_layout_t;
 
 typedef struct {
@@ -38,9 +41,11 @@ typedef struct {
     int width;                 // matrix width in pixels (e.g. 29)
     int height;                // matrix height in pixels (e.g. 5)
     lm_layout_t layout;        // physical wiring layout
-    bool first_row_reversed;   // if true, row 0 runs right->left instead of left->right
-                                // (only relevant for LM_LAYOUT_SERPENTINE; for
-                                // LM_LAYOUT_ROW_MAJOR every row uses this same direction)
+    bool first_line_reversed;  // if true, the first row (ROWS* layouts) or
+                                // first column (COLUMNS* layouts) runs in
+                                // the "reverse" direction (right->left, or
+                                // bottom->top) instead of the default
+                                // forward direction (left->right / top->bottom)
     uint8_t brightness;        // global brightness scale 0-255, applied at lm_show()
 } led_matrix_config_t;
 

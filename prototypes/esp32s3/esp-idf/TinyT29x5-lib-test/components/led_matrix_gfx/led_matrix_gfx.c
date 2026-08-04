@@ -14,24 +14,42 @@ struct led_matrix_s {
     int width;
     int height;
     lm_layout_t layout;
-    bool first_row_reversed;
+    bool first_line_reversed;
     uint8_t brightness;
     lm_color_t *fb;            // width*height framebuffer, row-major (y*width + x)
     led_strip_handle_t strip;  // physical driver
 };
 
 // --- physical pixel index mapping ------------------------------------------
+//
+// (x, y) are always logical drawing coordinates: x in [0, width), y in
+// [0, height), origin top-left, regardless of physical wiring. This
+// function is the only place that needs to know how the strip actually
+// snakes through the panel.
 
 static inline int xy_to_index(const led_matrix_t *m, int x, int y)
 {
-    if (m->layout == LM_LAYOUT_ROW_MAJOR) {
-        int col = m->first_row_reversed ? (m->width - 1 - x) : x;
+    switch (m->layout) {
+    case LM_LAYOUT_ROWS: {
+        int col = m->first_line_reversed ? (m->width - 1 - x) : x;
         return y * m->width + col;
     }
-    // Serpentine: direction alternates every row.
-    bool row_reversed = (y % 2 == 0) ? m->first_row_reversed : !m->first_row_reversed;
-    int col = row_reversed ? (m->width - 1 - x) : x;
-    return y * m->width + col;
+    case LM_LAYOUT_ROWS_SERPENTINE: {
+        bool reversed = (y % 2 == 0) ? m->first_line_reversed : !m->first_line_reversed;
+        int col = reversed ? (m->width - 1 - x) : x;
+        return y * m->width + col;
+    }
+    case LM_LAYOUT_COLUMNS: {
+        int row = m->first_line_reversed ? (m->height - 1 - y) : y;
+        return x * m->height + row;
+    }
+    case LM_LAYOUT_COLUMNS_SERPENTINE:
+    default: {
+        bool reversed = (x % 2 == 0) ? m->first_line_reversed : !m->first_line_reversed;
+        int row = reversed ? (m->height - 1 - y) : y;
+        return x * m->height + row;
+    }
+    }
 }
 
 // --- init / deinit ----------------------------------------------------------
@@ -51,7 +69,7 @@ led_matrix_t *led_matrix_init(const led_matrix_config_t *config)
     m->width = config->width;
     m->height = config->height;
     m->layout = config->layout;
-    m->first_row_reversed = config->first_row_reversed;
+    m->first_line_reversed = config->first_line_reversed;
     m->brightness = config->brightness ? config->brightness : 255;
 
     m->fb = calloc((size_t)m->width * m->height, sizeof(lm_color_t));

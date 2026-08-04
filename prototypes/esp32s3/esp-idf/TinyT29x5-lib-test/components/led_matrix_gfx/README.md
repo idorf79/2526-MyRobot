@@ -61,29 +61,45 @@ led_matrix_gfx/
 
 Your 145 LEDs are one continuous strip snaking through a 29x5 grid. The
 library needs to know *how* it snakes so it can translate your (x, y)
-drawing coordinates to the correct physical LED index. Two things control
-this in `led_matrix_config_t`:
+drawing coordinates (always: x = 0..28 left→right, y = 0..4 top→bottom,
+regardless of wiring) to the correct physical LED index. Two independent
+things control this in `led_matrix_config_t`:
 
-- `layout`:
-  - `LM_LAYOUT_SERPENTINE` — rows alternate direction (row 0 goes
-    left→right, row 1 right→left, row 2 left→right, ...). This is the
-    standard wiring for a single strip folded into a panel, and is the
-    default in the example.
-  - `LM_LAYOUT_ROW_MAJOR` — every row runs the same direction (you'd
-    physically jump the strip back to the start edge for each new row).
-- `first_row_reversed` — set this `true` if row 0 (y = 0) starts on the
-  *right* edge instead of the left.
+- `layout` — is the strip wired in complete **rows** (each run is 29
+  pixels) or complete **columns** (each run is 5 pixels)? And within
+  that, does every run go the same direction, or does direction
+  **alternate** (serpentine/zigzag) each time it jumps to the next
+  row/column? That's 4 combinations:
+  - `LM_LAYOUT_ROWS`
+  - `LM_LAYOUT_ROWS_SERPENTINE`
+  - `LM_LAYOUT_COLUMNS`
+  - `LM_LAYOUT_COLUMNS_SERPENTINE`
 
-**If you're not sure which way your panel is wired:** run the example,
-watch `lm_draw_text(matrix, 0, 0, "HI", LM_WHITE)`. If it's legible,
-you guessed right. If it looks shredded/interleaved (alternating rows
-scrambled), toggle `layout`. If it's mirrored left-right, toggle
-`first_row_reversed`.
+  A hand-built panel is almost always one of the two `_SERPENTINE`
+  variants — a strip physically can't jump back to a start edge without
+  extra wiring, it has to double back. Whether that's ROWS_SERPENTINE
+  or COLUMNS_SERPENTINE depends on which dimension the strip was folded
+  along. For an oddly-shaped panel like 29x5, folding into 29 columns of
+  5 (COLUMNS_SERPENTINE) is common, since 5 is a natural short "fold
+  height" for a long strip.
 
-If your physical layout is more unusual than a simple row/serpentine grid
-(e.g. it's wired column-by-column, or in tiles), the mapping lives entirely
-in `xy_to_index()` in `led_matrix_gfx.c` — it's a ~10 line function, easy to
-adapt.
+- `first_line_reversed` — `true` if the very first row (ROWS* layouts)
+  or first column (COLUMNS* layouts) runs *backwards* relative to the
+  default (right→left instead of left→right, or bottom→top instead of
+  top→bottom).
+
+**Don't guess — run the self-test.** `example_main.c` includes
+`wiring_self_test()`, which cycles through all 8 combinations, drawing
+"HI" on the panel and logging which combo produced it. Uncomment the
+call to it in `app_main()`, flash, and watch both the panel and the
+serial log — when "HI" appears correctly (legible, left-to-right, not
+mirrored), the log line printed just before it is your config. Then
+hardcode that combo and remove the self-test call.
+
+If your physical layout is more unusual than a simple grid (e.g. wired
+in separate tiles), the mapping lives entirely in `xy_to_index()` in
+`led_matrix_gfx.c` — it's a small function, easy to extend with a 5th
+case.
 
 ## API overview
 
@@ -92,8 +108,8 @@ led_matrix_config_t config = {
     .gpio_num = 42,
     .width = 29,
     .height = 5,
-    .layout = LM_LAYOUT_SERPENTINE,
-    .first_row_reversed = false,
+    .layout = LM_LAYOUT_COLUMNS_SERPENTINE,
+    .first_line_reversed = false,
     .brightness = 40,   // 0-255, global scale applied on lm_show()
 };
 led_matrix_t *m = led_matrix_init(&config);
