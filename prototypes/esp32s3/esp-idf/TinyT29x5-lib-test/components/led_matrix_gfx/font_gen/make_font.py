@@ -40,12 +40,12 @@ FONT = {
     'K': ["#.#", "#.#", "##.", "#.#", "#.#"],
     'L': ["#..", "#..", "#..", "#..", "###"],
     'M': ["#.#", "###", "###", "#.#", "#.#"],
-    'N': ["#.#", "##.", "#.#", ".##", "#.#"],
+    'N': ["#.#", "##.", ".#.", ".##", "#.#"],
     'O': [".#.", "#.#", "#.#", "#.#", ".#."],
     'P': ["##.", "#.#", "##.", "#..", "#.."],
     'Q': [".#.", "#.#", "#.#", ".#.", "..#"],
     'R': ["##.", "#.#", "##.", "#.#", "#.#"],
-    'S': [".##", "#..", ".#.", "..#", "##."],
+    'S': ["###", "#..", "###", "..#", "###"],
     'T': ["###", ".#.", ".#.", ".#.", ".#."],
     'U': ["#.#", "#.#", "#.#", "#.#", ".#."],
     'V': ["#.#", "#.#", "#.#", "#.#", ".#."],
@@ -78,6 +78,14 @@ def main():
     for ch, rows in FONT.items():
         assert len(rows) == 5, f"glyph {ch!r} must have 5 rows"
         preview(ch, rows)
+
+    # Alias lowercase a-z to the same glyphs as uppercase. A visually
+    # distinct lowercase style (shorter x-height, descenders, etc.) doesn't
+    # fit legibly in a 5-row-tall font -- better to render lowercase input
+    # as the uppercase glyph than to silently render nothing.
+    for ch in list(FONT.keys()):
+        if ch.isalpha() and ch.isupper():
+            FONT[ch.lower()] = FONT[ch]
 
     lines = []
     lines.append("// Auto-generated 3x5 pixel font. See font_gen/make_font.py.")

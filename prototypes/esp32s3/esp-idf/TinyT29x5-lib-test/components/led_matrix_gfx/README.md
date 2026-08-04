@@ -127,10 +127,13 @@ lm_show(m);                              // nothing appears until you call this
 
 Text is a compact **3 pixels wide x 5 pixels tall** font (uppercase
 A-Z, digits 0-9, space, and basic punctuation `. , ! ? : - '`), sized to
-exactly fill your 5-row-tall panel. At 3px + 1px spacing per character,
-you get about 7 characters visible at once on a 29-wide panel — the
-`example_main.c` scrolling demo is the practical way to show longer
-messages.
+exactly fill your 5-row-tall panel. Lowercase `a`-`z` are also accepted
+and rendered — they're aliased to the same shapes as their uppercase
+counterparts, since a genuinely distinct lowercase style (shorter
+x-height, descenders, etc.) doesn't stay legible at 5px tall. At 3px +
+1px spacing per character, you get about 7 characters visible at once
+on a 29-wide panel — the `example_main.c` scrolling demo is the
+practical way to show longer messages.
 
 ## Notes
 
