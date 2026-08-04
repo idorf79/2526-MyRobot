@@ -186,6 +186,34 @@ void app_main(void)
             lm_show(matrix);
             vTaskDelay(pdMS_TO_TICKS(blink_time));
         }
+        lm_clear(matrix);
+
+        // --- static text --------------------------------------------
+        lm_draw_text(matrix, (MATRIX_WIDTH / 2), 0, "3", LM_RED);
+        lm_show(matrix);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+
+        // --- static text --------------------------------------------
+        lm_draw_text(matrix, (MATRIX_WIDTH / 4), 0, "2", LM_BLUE);
+        lm_show(matrix);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+
+        // --- static text --------------------------------------------
+        lm_draw_text(matrix, (MATRIX_WIDTH / 4) * 3, 0, "1", LM_GREEN);
+        lm_show(matrix);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+
+        // --- dynamic text --------------------------------------------
+        for (int counter = 1; counter <= 10; counter ++){
+            char text[3];
+            itoa(counter, text, 10);
+            lm_clear(matrix);
+            lm_draw_text(matrix, (MATRIX_WIDTH / 4) * 2, 0, text, LM_MAGENTA);
+            lm_show(matrix);
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(2500));
 
         lm_clear(matrix);
         lm_show(matrix);
