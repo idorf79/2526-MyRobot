@@ -78,65 +78,116 @@ void app_main(void)
     // guessing. See its definition below.
     // wiring_self_test(matrix);
 
-    // --- 1. static shapes ---------------------------------------------
-    lm_clear(matrix);
-    lm_fill_rect(matrix, 0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, LM_WHITE);
-    lm_draw_rect(matrix, 0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, LM_RED);
-    lm_draw_line(matrix, 0, 0, MATRIX_WIDTH - 1, MATRIX_HEIGHT - 1, LM_GREEN);
-    lm_fill_circle(matrix, 14, 2, 2, LM_BLUE);
-    lm_show(matrix);
-    vTaskDelay(pdMS_TO_TICKS(3000));
+    const int blink_time = 500;
 
-    // --- 2. static text --------------------------------------------
-    lm_clear(matrix);
-    lm_draw_text(matrix, 0, 0, "HI", LM_WHITE);
-    lm_show(matrix);
-    vTaskDelay(pdMS_TO_TICKS(3000));
-
-    // --- 3. scrolling text -------------------------------------------
-    char *message = "HELLO FROM ESP32S3 - PURE ESP-IDF NEOPIXEL MATRIX";
-    int text_w = lm_text_width(message);
-
-    for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
+    while (true){
+        // --- 1. static shapes ---------------------------------------------
         lm_clear(matrix);
-        lm_draw_text(matrix, offset, 0, message, LM_WHITE);
+        lm_fill_rect(matrix, 0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, LM_WHITE);
+        lm_draw_rect(matrix, 0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, LM_RED);
+        lm_draw_line(matrix, 0, 0, MATRIX_WIDTH - 1, MATRIX_HEIGHT - 1, LM_GREEN);
+        lm_fill_circle(matrix, 14, 2, 2, LM_BLUE);
         lm_show(matrix);
-        vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
-    }
+        vTaskDelay(pdMS_TO_TICKS(3000));
 
-    // --- 4. scrolling text -------------------------------------------
-    const char *message01 = "abcdefghijklmnopqrstuvwxyx";
-    text_w = lm_text_width(message01);
-
-    for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
+        // --- 2. static text --------------------------------------------
         lm_clear(matrix);
-        lm_draw_text(matrix, offset, 0, message01, LM_WHITE);
+        lm_draw_text(matrix, 0, 0, "HI", LM_DARK_ORANGE);
         lm_show(matrix);
-        vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
-    }    
-    
-    // --- 5. scrolling text -------------------------------------------
-    const char *message02 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    text_w = lm_text_width(message02);
+        vTaskDelay(pdMS_TO_TICKS(3000));
 
-    for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
-        lm_clear(matrix);
-        lm_draw_text(matrix, offset, 0, message02, LM_WHITE);
-        lm_show(matrix);
-        vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
-    }
+        // --- 3. scrolling text -------------------------------------------
+        char *message = "HELLO FROM ESP32S3 - PURE ESP-IDF NEOPIXEL MATRIX";
+        int text_w = lm_text_width(message);
+
+        for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
+            lm_clear(matrix);
+            lm_draw_text(matrix, offset, 0, message, LM_WHITE);
+            lm_show(matrix);
+            vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
+        }
+
+        // --- 4. scrolling text -------------------------------------------
+        const char *message01 = "abcdefghijklmnopqrstuvwxyz";
+        text_w = lm_text_width(message01);
+
+        for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
+            lm_clear(matrix);
+            lm_draw_text(matrix, offset, 0, message01, LM_YELLOW);
+            lm_show(matrix);
+            vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
+        }    
+        
+        // --- 5. scrolling text -------------------------------------------
+        const char *message02 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        text_w = lm_text_width(message02);
+
+        for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
+            lm_clear(matrix);
+            lm_draw_text(matrix, offset, 0, message02, LM_WHITE);
+            lm_show(matrix);
+            vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
+        }
 
         // --- 5. scrolling text -------------------------------------------
-    const char *message03 = "0123456789";
-    text_w = lm_text_width(message03);
+        const char *message03 = "0123456789";
+        text_w = lm_text_width(message03);
 
-    for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
+        for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
+            lm_clear(matrix);
+            lm_draw_text(matrix, offset, 0, message03, LM_ORANGE);
+            lm_show(matrix);
+            vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
+        }
+
+        // Audi
+        // Blink left
+        for (int blinkCounter = 0; blinkCounter <= 5; blinkCounter++){
+            lm_clear(matrix);
+            lm_show(matrix);
+            vTaskDelay(pdMS_TO_TICKS(blink_time));
+            for (int width = 0; width <= (MATRIX_WIDTH / 2); width++)
+            {
+                lm_fill_rect(matrix, (MATRIX_WIDTH / 2) - width, 0, width , MATRIX_HEIGHT, LM_DARK_ORANGE);
+                lm_show(matrix);
+                vTaskDelay(pdMS_TO_TICKS(blink_time / (MATRIX_WIDTH / 2)));
+            }
+        }
+        // Blink Right
+        for (int blinkCounter = 0; blinkCounter <= 5; blinkCounter++){
+            lm_clear(matrix);
+            lm_show(matrix);
+            vTaskDelay(pdMS_TO_TICKS(blink_time));
+            for (int width = 0; width <= (MATRIX_WIDTH / 2); width++)
+            {
+                lm_fill_rect(matrix, (MATRIX_WIDTH / 2), 0, width, MATRIX_HEIGHT, LM_DARK_ORANGE);
+                lm_show(matrix);
+                vTaskDelay(pdMS_TO_TICKS(blink_time / (MATRIX_WIDTH / 2)));
+            }
+        }
+
+        // Normal Blink
+        // Blink left
+        for (int blinkCounter = 0; blinkCounter <= 5; blinkCounter++){
+            lm_clear(matrix);
+            lm_show(matrix);
+            vTaskDelay(pdMS_TO_TICKS(blink_time));
+            lm_fill_rect(matrix, 0, 0, MATRIX_WIDTH / 2, MATRIX_HEIGHT, LM_DARK_ORANGE);
+            lm_show(matrix);
+            vTaskDelay(pdMS_TO_TICKS(blink_time));
+        }
+
+        // Blink Right
+        for (int blinkCounter = 0; blinkCounter <= 5; blinkCounter++){
+            lm_clear(matrix);
+            lm_show(matrix);
+            vTaskDelay(pdMS_TO_TICKS(blink_time));
+            lm_fill_rect(matrix, MATRIX_WIDTH / 2, 0, MATRIX_WIDTH, MATRIX_HEIGHT, LM_DARK_ORANGE);
+            lm_show(matrix);
+            vTaskDelay(pdMS_TO_TICKS(blink_time));
+        }
+
         lm_clear(matrix);
-        lm_draw_text(matrix, offset, 0, message03, LM_WHITE);
         lm_show(matrix);
-        vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
     }
-
-    lm_clear(matrix);
-    lm_show(matrix);
 }
