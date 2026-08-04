@@ -16,14 +16,19 @@ typedef struct {
 } lm_color_t;
 
 #define LM_COLOR(R, G, B) ((lm_color_t){ .r = (R), .g = (G), .b = (B) })
-#define LM_BLACK   LM_COLOR(0, 0, 0)
-#define LM_WHITE   LM_COLOR(255, 255, 255)
-#define LM_RED     LM_COLOR(255, 0, 0)
-#define LM_GREEN   LM_COLOR(0, 255, 0)
-#define LM_BLUE    LM_COLOR(0, 0, 255)
-#define LM_YELLOW  LM_COLOR(255, 255, 0)
-#define LM_ORANGE  LM_COLOR(255, 165, 0)
+#define LM_BLACK        LM_COLOR(0, 0, 0)
+#define LM_WHITE        LM_COLOR(255, 255, 255)
+#define LM_RED          LM_COLOR(255, 0, 0)
+#define LM_GREEN        LM_COLOR(0, 255, 0)
+#define LM_LIGHT_GREEN  LM_COLOR(144, 238, 144)
+#define LM_DARK_GREEN   LM_COLOR(0, 100, 0)
+#define LM_BLUE         LM_COLOR(0, 0, 255)
+#define LM_LIGHT_BLUE   LM_COLOR(173, 216, 230)
+#define LM_DARK_BLUE    LM_COLOR(0, 0, 139)
+#define LM_YELLOW       LM_COLOR(255, 255, 0)
+#define LM_ORANGE       LM_COLOR(255, 165, 0)
 #define LM_DARK_ORANGE  LM_COLOR(255, 140, 0)
+#define LM_MAGENTA      LM_COLOR(255, 0, 255)
 
 // How the single LED strip is physically wired into the width x height grid.
 // The strip either runs in complete ROWS (each traversal is `width` pixels
