@@ -64,7 +64,7 @@ void app_main(void)
         // and README.md "Wiring / layout" section.
         .layout = LM_LAYOUT_COLUMNS_SERPENTINE,
         .first_line_reversed = false,
-        .brightness = 40, // keep this low to start with -- 145 LEDs at full
+        .brightness = 60, // keep this low to start with -- 145 LEDs at full
                            // white brightness draws a *lot* of current
     };
 
@@ -80,6 +80,7 @@ void app_main(void)
 
     // --- 1. static shapes ---------------------------------------------
     lm_clear(matrix);
+    lm_fill_rect(matrix, 0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, LM_WHITE);
     lm_draw_rect(matrix, 0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, LM_RED);
     lm_draw_line(matrix, 0, 0, MATRIX_WIDTH - 1, MATRIX_HEIGHT - 1, LM_GREEN);
     lm_fill_circle(matrix, 14, 2, 2, LM_BLUE);
@@ -93,12 +94,45 @@ void app_main(void)
     vTaskDelay(pdMS_TO_TICKS(3000));
 
     // --- 3. scrolling text -------------------------------------------
-    const char *message = "HELLO FROM ESP32S3 - PURE ESP-IDF NEOPIXEL MATRIX";
+    char *message = "HELLO FROM ESP32S3 - PURE ESP-IDF NEOPIXEL MATRIX";
     int text_w = lm_text_width(message);
 
     for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
         lm_clear(matrix);
         lm_draw_text(matrix, offset, 0, message, LM_WHITE);
+        lm_show(matrix);
+        vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
+    }
+
+    // --- 4. scrolling text -------------------------------------------
+    const char *message01 = "abcdefghijklmnopqrstuvwxyx";
+    text_w = lm_text_width(message01);
+
+    for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
+        lm_clear(matrix);
+        lm_draw_text(matrix, offset, 0, message01, LM_WHITE);
+        lm_show(matrix);
+        vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
+    }    
+    
+    // --- 5. scrolling text -------------------------------------------
+    const char *message02 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    text_w = lm_text_width(message02);
+
+    for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
+        lm_clear(matrix);
+        lm_draw_text(matrix, offset, 0, message02, LM_WHITE);
+        lm_show(matrix);
+        vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
+    }
+
+        // --- 5. scrolling text -------------------------------------------
+    const char *message03 = "0123456789";
+    text_w = lm_text_width(message03);
+
+    for (int offset = MATRIX_WIDTH; offset > -text_w; offset--) {
+        lm_clear(matrix);
+        lm_draw_text(matrix, offset, 0, message03, LM_WHITE);
         lm_show(matrix);
         vTaskDelay(pdMS_TO_TICKS(60)); // scroll speed
     }
