@@ -10,3 +10,7 @@ dependencies:
     git: git@github.com:idorf79/esp-idf-lib.git
     version: "*"
     path: components/seesaw
+  micro_ros_espidf_component:
+      # override_path: "../components/micro_ros_espidf_component"
+      git: git@github.com:micro-ROS/micro_ros_espidf_component.git
+      version: "jazzy"
