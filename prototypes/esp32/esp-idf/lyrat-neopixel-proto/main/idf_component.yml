@@ -1,0 +1,12 @@
+---
+version: 1.0.0
+description: default
+dependencies:
+  neotrellis: 
+    git: git@github.com:idorf79/esp-idf-lib.git
+    version: "*"
+    path: components/neotrellis
+  seesaw: 
+    git: git@github.com:idorf79/esp-idf-lib.git
+    version: "*"
+    path: components/seesaw
