@@ -112,8 +112,8 @@ void error_loop() {
 
 void vInitMicroROS() {
 
-  //set_microros_wifi_transports("robot-lan", "robot-lan-2024!", "10.10.45.40", 8888);
-  set_microros_transports();
+  set_microros_wifi_transports("robot-lan", "robot-lan-2024!", "10.10.45.40", 8888);
+  //set_microros_transports();
 
   allocator = rcl_get_default_allocator();
 

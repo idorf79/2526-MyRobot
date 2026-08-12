@@ -61,8 +61,8 @@ void micro_ros_task(void * arg)
 	rmw_init_options_t* rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
 
 	// Static Agent IP and port can be used instead of autodisvery.
-	RCCHECK(rmw_uros_options_set_udp_address(CONFIG_MICRO_ROS_AGENT_IP, CONFIG_MICRO_ROS_AGENT_PORT, rmw_options));
-	//RCCHECK(rmw_uros_discover_agent(rmw_options));
+	// RCCHECK(rmw_uros_options_set_udp_address(CONFIG_MICRO_ROS_AGENT_IP, CONFIG_MICRO_ROS_AGENT_PORT, rmw_options));
+	// //RCCHECK(rmw_uros_discover_agent(rmw_options));
 #endif
 	// Setup support structure.
 	RCCHECK(rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator));
@@ -109,7 +109,9 @@ void micro_ros_task(void * arg)
 	send_msg.data = 0;
 	while(1){
 		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-		usleep(100000);
+		//usleep(100000);
+        vTaskDelay(pdMS_TO_TICKS(2500));
+
 	}
 
 	// Free resources.
@@ -341,8 +343,8 @@ void app_main(void)
 
     xTaskCreate(micro_ros_task,
         "uros_task",
-        CONFIG_MICRO_ROS_APP_STACK,
+        16000,
         NULL,
-        CONFIG_MICRO_ROS_APP_TASK_PRIO,
+        6,
         NULL);
 }
