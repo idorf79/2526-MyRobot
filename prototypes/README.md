@@ -75,6 +75,37 @@ make -f libmicrosros ${PWD}/micro_ros_dev/install
 Also make sure RMW_IMPLEMENTATION is not set, or set to 'rmw_microxrcedds'
 Then you can build the ESP MicroROS component.
 
+## ROS2 in Docker commands
+
+If you want to run multiple ROS2 docker containers which can communicate (and are running on ONE machine), 
+create a "ros network" on the machine, which then can be used with the '--network' argument.
+
+```bash
+docker network create ros-network
+```
+This will create the 'ros-network' to use between containers. No communication possible to outside the host.
+
+
+Start a Docker with MicroROS Agent, listening to UDP port 8888.
+
+```bash
+docker run -it -p 8888:8888/udp --rm --net=ros-network microros/micro-ros-agent:jazzy udp4 --port 8888 -v6
+```
+
+Start a Docker container to run ROS2 commands
+
+```bash
+docker run -it --name pub_container --network ros-network -e ROS_DOMAIN_ID=0 -e RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros:jazzy-ros-base bash
+```
+
+Then you can publish or subscribe to topic.
+
+```bash
+ros2 topic pub /your_topic std_msgs/msg/String "data: 'hello'"
+ros2 topic pub /ttiny29x5_subscriber std_msgs/msg/Int32 "{data: 11}" --once
+```
+
+
 ## External Libraries from Uncle Rus
 
 For the ESP32 some external libraries are used from https://github.com/UncleRus/esp-idf-lib.
