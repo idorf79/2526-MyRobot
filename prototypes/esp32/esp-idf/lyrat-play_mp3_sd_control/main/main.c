@@ -118,7 +118,7 @@ void sdcard_url_save_cb(void *user_data, char *url)
     }
 }
 
-void app_main(void)
+void music_task(void * arg)
 {
     esp_log_level_set("*", ESP_LOG_WARN);
     esp_log_level_set(TAG, ESP_LOG_INFO);
@@ -272,4 +272,19 @@ void app_main(void)
     audio_element_deinit(rsp_handle);
     periph_service_destroy(input_ser);
     esp_periph_set_destroy(set);
+}
+
+void app_main(void)
+{
+    //pin micro-ros task in APP_CPU to make PRO_CPU to deal with wifi:
+    xTaskCreate(music_task,
+            "music_task",
+            16000,
+            NULL,
+            5,
+            NULL);
+    while (1)
+    {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
 }
