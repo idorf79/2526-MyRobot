@@ -33,7 +33,7 @@
 #include "sdcard_list.h"
 #include "sdcard_scan.h"
 
-static const char *TAG = "SDCARD_MP3_CONTROL_EXAMPLE";
+static const char *TAG = "MUSIC_TASK";
 
 audio_pipeline_handle_t pipeline;
 audio_element_handle_t i2s_stream_writer, mp3_decoder, fatfs_stream_reader, rsp_handle;

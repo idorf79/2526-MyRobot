@@ -18,6 +18,8 @@ static const char *TAG = "MAIN";
 
 void app_main(void)
 {
+    ESP_LOGI(TAG, "Starting main");
+
     //pin micro-ros task in APP_CPU to make PRO_CPU to deal with wifi:
     xTaskCreate(music_task,
             "music_task",
