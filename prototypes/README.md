@@ -106,6 +106,31 @@ ros2 topic pub /ttiny29x5_subscriber std_msgs/msg/Int32 "{data: 11}" --once
 ```
 
 
+## ESP-ADF
+
+```bash
+cd esp
+git clone --recursive -b v2.8 https://github.com/espressif/esp-adf.git esp-adf-v2.8
+```
+
+Add the ESP-ADF to 'vscode/settings.jons':
+
+```
+  "idf.customExtraVars": {
+    "ADF_PATH": "/home/fsteros/esp/esp-adf-v2.8",
+  },
+```
+
+Add ADF patches to ESP-IDF:
+
+```bash
+cd /home/fsteros/.espressif/v5.5.5/esp-idf
+
+git apply /home/fsteros/esp/esp-adf-v2.8/idf_patches/idf_v5.5_freertos.patch
+```
+
+Now you should  be able to copy ESP-ADF examples, build and run them ;)
+
 ## External Libraries from Uncle Rus
 
 For the ESP32 some external libraries are used from https://github.com/UncleRus/esp-idf-lib.
