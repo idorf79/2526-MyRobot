@@ -1,2 +1,0 @@
-FROM microros/micro-ros-agent:jazzy
-RUN apt-get update && apt-get install -y ros-jazzy-example-interfaces

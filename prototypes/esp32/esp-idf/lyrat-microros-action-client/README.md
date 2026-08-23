@@ -69,20 +69,7 @@ docker run -it -p 8888:8888/udp --rm --net=ros-network -e ROS_DOMAIN_ID=0 -e RMW
 
 If you run into issues with the actions and microROS (server doesn't get any request).
 
-I had to build my own version of the MicroROS agent docker. As it needed some example code which wasn't build in.
-
-```bash
-cd <...>/prototypes
-docker build -t my-micro-ros-agent:jazzy .
-```
-
-to run:
-
-```bash
-docker run -it -p 8888:8888/udp --rm --net=ros-network -e ROS_DOMAIN_ID=0 -e RMW_IMPLEMENTATION=rmw_fastrtps_cpp my-micro-ros-agent:jazzy udp4 --port 8888 -v6
-```
-
-Next to that, it might be because there are not enough resources allocated. Xheck 'colcon.meta' in the micro-ros component.
+This might be because there are not enough resources allocated. Xheck 'colcon.meta' in the micro-ros component.
 Check the settings below:
 
 ```file
