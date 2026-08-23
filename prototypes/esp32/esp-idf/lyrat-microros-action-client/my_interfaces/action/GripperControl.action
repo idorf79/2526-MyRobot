@@ -1,0 +1,14 @@
+# Goal
+string  command   # "open" or "close"
+float64 effort    # 0.0 – 1.0  (default 1.0)
+
+---
+# Result
+bool    success
+string  message
+float64 final_position
+
+---
+# Feedback
+float64 current_position
+string  status

@@ -1,0 +1,15 @@
+# Goal
+string position_name
+float64 duration        # seconds (0 → use default 2.0 s)
+
+---
+# Result
+bool      success
+string    message
+float64[] final_joint_positions
+
+---
+# Feedback
+float64   progress                 # 0.0 – 1.0
+float64[] current_joint_positions
+string    status

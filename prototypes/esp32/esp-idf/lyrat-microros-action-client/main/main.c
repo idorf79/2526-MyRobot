@@ -12,20 +12,16 @@
 #include <rclc/executor.h>
 #include <rmw_microros/rmw_microros.h>
 
-#include <example_interfaces/action/fibonacci.h>
+#include <my_interfaces/action/gripper_control.h>
 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){printf("Failed status on line %d: %d. Aborting.\n",__LINE__,(int)temp_rc);vTaskDelete(NULL);}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){printf("Failed status on line %d: %d. Continuing.\n",__LINE__,(int)temp_rc);}}
 
 
-#define MAX_FIBONACCI_ORDER 500
-#define GOALS_NUMBER 5
-
 static const char *TAG = "lyrat-microros-action-client";
 
+my_interfaces__action__GripperControl_SendGoal_Request gripper_goal_request;
 
-example_interfaces__action__Fibonacci_SendGoal_Request ros_goal_request[GOALS_NUMBER];
-uint32_t goals_value[GOALS_NUMBER] = {1, 15, 20, 55, 201};
 bool goals_completed = false;
 
 rclc_action_client_t action_client;
@@ -34,11 +30,11 @@ void goal_request_callback(rclc_action_goal_handle_t * goal_handle, bool accepte
 {
   (void) context;
 
-  example_interfaces__action__Fibonacci_SendGoal_Request * request =
-    (example_interfaces__action__Fibonacci_SendGoal_Request *) goal_handle->ros_goal_request;
+  my_interfaces__action__GripperControl_SendGoal_Request * request =
+    (my_interfaces__action__GripperControl_SendGoal_Request *) goal_handle->ros_goal_request;
   printf(
-    "Goal request (order: %ld): %s\n",
-    request->goal.order,
+    "Goal request (command: %s): %s\n",
+    request->goal.command.data,
     accepted ? "Accepted" : "Rejected"
   );
 }
@@ -47,25 +43,13 @@ void feedback_callback(rclc_action_goal_handle_t * goal_handle, void * ros_feedb
 {
   (void) context;
 
-  example_interfaces__action__Fibonacci_SendGoal_Request * request =
-    (example_interfaces__action__Fibonacci_SendGoal_Request *) goal_handle->ros_goal_request;
+  my_interfaces__action__GripperControl_SendGoal_Request * request =
+    (my_interfaces__action__GripperControl_SendGoal_Request *) goal_handle->ros_goal_request;
 
   printf(
-    "Goal Feedback (order: %ld) [",
-    request->goal.order
+    "Goal Feedback (command: %s) [",
+    request->goal.command.data
   );
-
-  example_interfaces__action__Fibonacci_FeedbackMessage * feedback =
-    (example_interfaces__action__Fibonacci_FeedbackMessage *) ros_feedback;
-
-  for (size_t i = 0; i < feedback->feedback.sequence.size; i++) {
-    printf("%ld ", feedback->feedback.sequence.data[i]);
-  }
-  printf("\b]\n");
-
-  if (request->goal.order == 20 && feedback->feedback.sequence.size == 10) {
-    rclc_action_send_cancel_request(goal_handle);
-  }
 }
 
 void result_request_callback(
@@ -74,23 +58,19 @@ void result_request_callback(
 {
   (void) context;
 
-  static size_t goal_count = 1;
-
-  example_interfaces__action__Fibonacci_SendGoal_Request * request =
-    (example_interfaces__action__Fibonacci_SendGoal_Request *) goal_handle->ros_goal_request;
+  my_interfaces__action__GripperControl_SendGoal_Request * request =
+    (my_interfaces__action__GripperControl_SendGoal_Request *) goal_handle->ros_goal_request;
 
   printf(
-    "Goal Result (order: %ld) [",
-    request->goal.order
+    "Goal Result (command: %s) [",
+    request->goal.command.data
   );
 
-  example_interfaces__action__Fibonacci_GetResult_Response * result =
-    (example_interfaces__action__Fibonacci_GetResult_Response *) ros_result_response;
+  my_interfaces__action__GripperControl_GetResult_Response * result =
+    (my_interfaces__action__GripperControl_GetResult_Response *) ros_result_response;
 
   if (result->status == GOAL_STATE_SUCCEEDED) {
-    for (size_t i = 0; i < result->result.sequence.size; i++) {
-      printf("%ld ", result->result.sequence.data[i]);
-    }
+    printf("%s ", result->result.message.data);
   } else if (result->status == GOAL_STATE_CANCELED) {
     printf("CANCELED ");
   } else {
@@ -98,21 +78,6 @@ void result_request_callback(
   }
 
   printf("\b]\n");
-
-  // Request next action
-  if (goal_count < GOALS_NUMBER) {
-    if (RCL_RET_OK !=
-      rclc_action_send_goal_request(&action_client, &ros_goal_request[goal_count], NULL))
-    {
-      printf("Error sending request nº %d\n", goal_count);
-    } else {
-      goal_count++;
-
-      if (goal_count == GOALS_NUMBER) {
-        goals_completed = true;
-      }
-    }
-  }
 }
 
 void cancel_request_callback(
@@ -121,12 +86,12 @@ void cancel_request_callback(
 {
   (void) context;
 
-  example_interfaces__action__Fibonacci_SendGoal_Request * request =
-    (example_interfaces__action__Fibonacci_SendGoal_Request *) goal_handle->ros_goal_request;
+  my_interfaces__action__GripperControl_SendGoal_Request * request =
+    (my_interfaces__action__GripperControl_SendGoal_Request *) goal_handle->ros_goal_request;
 
   printf(
-    "Goal cancel request (order: %ld): %s\n",
-    request->goal.order,
+    "Goal cancel request (order: %s): %s\n",
+    request->goal.command.data,
     cancelled ? "Accepted" : "Rejected");
 }
 
@@ -166,8 +131,8 @@ void app_main(void)
   RCCHECK(rclc_action_client_init_default(
     &action_client,
     &node,
-    ROSIDL_GET_ACTION_TYPE_SUPPORT(example_interfaces, Fibonacci),
-    "fibonacci"
+    ROSIDL_GET_ACTION_TYPE_SUPPORT(my_interfaces, GripperControl),
+    "move_to_position"
   ));
   ESP_LOGI(TAG, "micro_ros_task clienr init done");
 
@@ -181,22 +146,10 @@ void app_main(void)
   // for more details.
   rclc_executor_init(&executor, &support.context, 6, &allocator);
 
-  example_interfaces__action__Fibonacci_FeedbackMessage ros_feedback;
-  example_interfaces__action__Fibonacci_GetResult_Response ros_result_response;
+  my_interfaces__action__GripperControl_FeedbackMessage ros_feedback;
+  my_interfaces__action__GripperControl_GetResult_Response ros_result_response;
 
-  ros_feedback.feedback.sequence.capacity = MAX_FIBONACCI_ORDER;
-  ros_feedback.feedback.sequence.size = 0;
-  ros_feedback.feedback.sequence.data = (int32_t *) malloc(
-    ros_feedback.feedback.sequence.capacity * sizeof(int32_t));
-
-  ros_result_response.result.sequence.capacity = MAX_FIBONACCI_ORDER;
-  ros_result_response.result.sequence.size = 0;
-  ros_result_response.result.sequence.data = (int32_t *) malloc(
-    ros_result_response.result.sequence.capacity * sizeof(int32_t));
-
-  for (size_t i = 0; i < 5; i++) {
-    ros_goal_request[i].goal.order = goals_value[i];
-  }
+  gripper_goal_request.goal.command.data = "open";
 
   rclc_executor_add_action_client(
     &executor,
@@ -214,7 +167,7 @@ void app_main(void)
   rclc_sleep_ms(1000);
 
   if (RCL_RET_OK !=
-    rclc_action_send_goal_request(&action_client, &ros_goal_request[0], NULL))
+    rclc_action_send_goal_request(&action_client, &gripper_goal_request, NULL))
   {
     printf("Error sending initial goal\n");
     goals_completed = true;
