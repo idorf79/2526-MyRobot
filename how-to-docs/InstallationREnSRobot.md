@@ -308,6 +308,11 @@ fix shutdown-app so robot does not shutdown if button is not connected correctly
 
 >>>> REnS_32GbUbuntu2404_linorobot_260704.img <<<<<
 
+Added fix to shutdown properly. ROS2 node 'joint_state_publisher' takes a lot of time to shut down.
+Fix is in '/etc/systemd/system/start_robot.service'.
+
+>>>> REnS_32GbUbuntu2404_linorobot_260826.img <<<<<
+
 TODO: Fix URDF:
 
 - IMU
