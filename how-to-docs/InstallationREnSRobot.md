@@ -10,6 +10,12 @@ sudo systemctl stop unattended-upgrades.service
 sudo systemctl disable unattended-upgrades.service
 ```
 
+1. Disable cloud-init
+
+```bash
+sudo touch /etc/cloud/cloud-init.disabled
+```
+
 1. Set max resolution for HDMI
 
 put this into '/boot/firmware/config.txt', under section '[all]':
@@ -75,12 +81,6 @@ fi
 
 ```bash
 sudo nano /etc/networkd-dispatcher/off.d/99-enable-wifi
-```
-
-1. Disable cloud-init
-
-```bash
-sudo touch /etc/cloud/cloud-init.disabled
 ```
 
 ```text
