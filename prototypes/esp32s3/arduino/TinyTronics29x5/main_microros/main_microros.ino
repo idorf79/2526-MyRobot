@@ -205,6 +205,16 @@ void vTaskupdateTemperatureAndHumidity(void *pvParameters) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(5000));
     if (toggleModeActive)
       showTemperature = !showTemperature;
+  }
+}
+
+void vTaskupdateDisplayDot(void *pvParameters) {
+
+  TickType_t xLastWakeTime;
+
+  xLastWakeTime = xTaskGetTickCount();
+  while (true) {
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
 
     if (updateDotOnState)
       updateDot = updateDotOnColor;
@@ -255,7 +265,7 @@ void vTaskupdateMatrix(void *pvParameters) {
     matrix.drawPixel(28, 4, errorDot);
 
     matrix.show();  // Update matrix
-    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(150));
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
   }
 }
 
@@ -354,6 +364,7 @@ void subscription_callback(const void *msgin) {
 void setup() {
 
   xTaskCreatePinnedToCore(vTaskupdateTemperatureAndHumidity, "getSensorData", 2048, NULL, 5, NULL, 1);
+  xTaskCreatePinnedToCore(vTaskupdateDisplayDot, "updateDisplayDot", 2048, NULL, 5, NULL, 1);
   xTaskCreatePinnedToCore(vTaskupdateMatrix, "updateMatrix", 4096, NULL, 10, NULL, 1);
 
 
