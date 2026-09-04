@@ -348,17 +348,16 @@ void subscription_callback(const void *msgin) {
 
 void setup() {
 
+  xTaskCreatePinnedToCore(vTaskupdateTemperatureAndHumidity, "getSensorData", 2048, NULL, 5, NULL, 1);
+  xTaskCreatePinnedToCore(vTaskupdateMatrix, "updateMatrix", 4096, NULL, 10, NULL, 1);
+
+
   set_microros_wifi_transports("robot-lan", "robot-lan-2024!", "10.2.50.40", 8888);
   //set_microros_transports();
 
   state = WAITING_AGENT;
-
-
-  xTaskCreatePinnedToCore(vTaskupdateTemperatureAndHumidity, "getSensorData", 2048, NULL, 5, NULL, 1);
-  xTaskCreatePinnedToCore(vTaskupdateMatrix, "updateMatrix", 4096, NULL, 10, NULL, 1);
-
+  
   xTaskCreatePinnedToCore(vTaskRos, "uRos", 4096, NULL, 10, NULL, 0);
-  vTaskDelay(pdMS_TO_TICKS(3000));
 
   xTaskCreatePinnedToCore(vTaskRosPublisher, "uPublisher", 4096, NULL, 10, &rosTaskPublisher, 0);
 
