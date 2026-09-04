@@ -43,6 +43,7 @@
 
 #include <std_msgs/msg/int32.h>
 #include <sensor_msgs/msg/temperature.h>
+#include <sensor_msgs/msg/relative_humidity.h>
 
 #if !defined(ESP32) && !defined(TARGET_PORTENTA_H7_M7) && !defined(ARDUINO_NANO_RP2040_CONNECT) && !defined(ARDUINO_WIO_TERMINAL)
 #error This example is only avaible for Arduino Portenta, Arduino Nano RP2040 Connect, ESP32 Dev module and Wio Terminal
@@ -103,8 +104,12 @@ bool updateDotOnState = true;
 
 rcl_publisher_t temp_publisher, hum_publisher;
 rcl_subscription_t subscriber;
-std_msgs__msg__Int32 hum_msg, command_msg;
+
+std_msgs__msg__Int32 command_msg;
+
 sensor_msgs__msg__Temperature sensorMsgTemp;
+sensor_msgs__msg__RelativeHumidity sensorMsgHum;
+
 rclc_support_t support;
 rcl_allocator_t allocator;
 rclc_executor_t executor;
@@ -155,7 +160,7 @@ bool vCreateMicroRosEntities() {
   RCCHECK(rclc_publisher_init_best_effort(
     &hum_publisher,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+    ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, RelativeHumidity),
     "humidity"));
 
   // create subscriber
@@ -258,20 +263,20 @@ void vTaskRosPublisher(void *pvParameters) {
 
   TickType_t xLastWakeTime;
 
-  hum_msg.data = 0;
+  sensorMsgHum.relative_humidity = 0;
 
   xLastWakeTime = xTaskGetTickCount();
 
   while (true) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(5000));
     if (state == AGENT_CONNECTED) {
-      hum_msg.data = humidity * 100;
+      sensorMsgHum.relative_humidity = humidity;// * 100;
 
       sensorMsgTemp.temperature = temperature;
 
       // Publish to the topic here
       RCSOFTCHECK(rcl_publish(&temp_publisher, &sensorMsgTemp, NULL));
-      RCSOFTCHECK(rcl_publish(&hum_publisher, &hum_msg, NULL));
+      RCSOFTCHECK(rcl_publish(&hum_publisher, &sensorMsgHum, NULL));
     }
   }
 }
