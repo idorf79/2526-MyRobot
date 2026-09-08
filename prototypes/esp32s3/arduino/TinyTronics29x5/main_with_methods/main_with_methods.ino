@@ -23,17 +23,14 @@
 // SOFTWARE.
 
 /*************************************************************************************/
-// IMPORTANT NOTE: Use ESP32 Core V2.0.17 (newer versions might result in a boot loop)
-#include <Adafruit_GFX.h>        // Tested with V1.12.1 (With BusIO v 1.15.0)
-#include <Adafruit_NeoMatrix.h>  // Tested with V1.3.3
-#include <Adafruit_NeoPixel.h>   // Tested with V1.15.1
-#include <Fonts/TomThumb.h>      // Included in Adafruit_GFX library
+#include <Adafruit_GFX.h>
+#include <Adafruit_NeoMatrix.h>
+#include <Adafruit_NeoPixel.h>
+#include <Fonts/TomThumb.h>
 
-#include <Wire.h>   // Included in ESP32 core
-#include <AHT20.h>  // Tested with V1.0.1. -> dvarrel
+#include <Wire.h>
+#include <AHT20.h>
 /*************************************************************************************/
-
-// Set Board to: LoLin S3 Mini
 
 AHT20 aht20;
 

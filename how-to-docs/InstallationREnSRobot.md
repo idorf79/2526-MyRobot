@@ -10,6 +10,12 @@ sudo systemctl stop unattended-upgrades.service
 sudo systemctl disable unattended-upgrades.service
 ```
 
+1. Disable cloud-init
+
+```bash
+sudo touch /etc/cloud/cloud-init.disabled
+```
+
 1. Set max resolution for HDMI
 
 put this into '/boot/firmware/config.txt', under section '[all]':
@@ -75,12 +81,6 @@ fi
 
 ```bash
 sudo nano /etc/networkd-dispatcher/off.d/99-enable-wifi
-```
-
-1. Disable cloud-init
-
-```bash
-sudo touch /etc/cloud/cloud-init.disabled
 ```
 
 ```text
@@ -304,7 +304,15 @@ Start robot during boot
 
 >>>> REnS_32GbUbuntu2404_linorobot_260612_02.img <<<<<
 
-TODO: fix shutdown-app so robot does not shutdown if button is not connected correctly?
+fix shutdown-app so robot does not shutdown if button is not connected correctly?
+
+>>>> REnS_32GbUbuntu2404_linorobot_260704.img <<<<<
+
+Added fix to shutdown properly. ROS2 node 'joint_state_publisher' takes a lot of time to shut down.
+Fix is in '/etc/systemd/system/start_robot.service'.
+
+>>>> REnS_32GbUbuntu2404_linorobot_260826.img <<<<<
+
 TODO: Fix URDF:
 
 - IMU

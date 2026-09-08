@@ -159,6 +159,14 @@ echo "source /opt/ros/jazzy/setup.bash" >> $HOME/.bashrc
 
 If you want to continue in the same terminal, source your `~/.bashrc` :)
 
+1. Remove older packages. Use with care!
+
+```bash
+rm -rf ~/uros_ws
+rm -rf ~/rens_ws
+sudo rm /etc/ros/rosdep/sources.list.d/20-default.list
+```
+
 1. Install the RenS software packages
 
 ```bash
@@ -166,6 +174,8 @@ mkdir -p ~/rens_tmp
 cd ~/rens_tmp
 wget https://github.com/AvansTi/rens/raw/refs/heads/jazzy_rens/install_linorobot2.bash
 bash install_linorobot2.bash 2wd
+
+cd ~
 
 rm -rf ~/rens_tmp
 
@@ -237,3 +247,13 @@ Under "Appliance Settings", set a version. For example: "260809".
 Click "Finish"
 
 You now should have an Appliance which you can share :) 
+
+
+TODO:
+
+- add 'rens' to group 'dailout'
+- install Visual Studio Code
+- install Arduino IDE
+- generate SSH-keys (?)
+- install Docker (?)
+- configure GIT (user & email)

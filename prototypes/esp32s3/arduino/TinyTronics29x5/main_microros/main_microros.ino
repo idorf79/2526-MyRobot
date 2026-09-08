@@ -25,14 +25,13 @@
 // SOFTWARE.
 
 /*************************************************************************************/
-// IMPORTANT NOTE: Use ESP32 Core V2.0.17 (newer versions might result in a boot loop)
-#include <Adafruit_GFX.h>       // Tested with V1.12.1 (With BusIO v 1.15.0)
-#include <Adafruit_NeoMatrix.h> // Tested with V1.3.3
-#include <Adafruit_NeoPixel.h>  // Tested with V1.15.1
-#include <Fonts/TomThumb.h>     // Included in Adafruit_GFX library
+#include <Adafruit_GFX.h>
+#include <Adafruit_NeoMatrix.h>
+#include <Adafruit_NeoPixel.h>
+#include <Fonts/TomThumb.h>
 
-#include <Wire.h>  // Included in ESP32 core
-#include <AHT20.h> // Tested with V1.0.1. -> dvarrel
+#include <Wire.h>
+#include <AHT20.h>
 
 #include <micro_ros_arduino.h>
 
@@ -44,42 +43,43 @@
 
 #include <std_msgs/msg/int32.h>
 #include <sensor_msgs/msg/temperature.h>
+#include <sensor_msgs/msg/relative_humidity.h>
 
 #if !defined(ESP32) && !defined(TARGET_PORTENTA_H7_M7) && !defined(ARDUINO_NANO_RP2040_CONNECT) && !defined(ARDUINO_WIO_TERMINAL)
 #error This example is only avaible for Arduino Portenta, Arduino Nano RP2040 Connect, ESP32 Dev module and Wio Terminal
 #endif
 
-#define RCCHECK(fn)              \
-  {                              \
-    rcl_ret_t temp_rc = fn;      \
-    if ((temp_rc != RCL_RET_OK)) \
-    {                            \
-      error_loop();              \
-    }                            \
+#define RCCHECK(fn) \
+  { \
+    rcl_ret_t temp_rc = fn; \
+    if ((temp_rc != RCL_RET_OK)) { \
+      error_loop(); \
+    } \
   }
-#define RCSOFTCHECK(fn)          \
-  {                              \
-    rcl_ret_t temp_rc = fn;      \
-    if ((temp_rc != RCL_RET_OK)) \
-    {                            \
-    }                            \
+#define RCSOFTCHECK(fn) \
+  { \
+    rcl_ret_t temp_rc = fn; \
+    if ((temp_rc != RCL_RET_OK)) { \
+    } \
   }
 
 /*************************************************************************************/
-
-// Set Board to: LoLin S3 Mini
-// Docker command to run on macbook:
-// docker run -it --rm -p 8888:8888/udp microros/micro-ros-agent:humble udp4 -p 8888 -v 6
-
-// Docker command to run on Linux:
-// docker run -it --net=host microros/micro-ros-agent:jazzy udp4 -p 8888 -v 6
-
-// ROS2 command to publish a topic to "test_topic" (which takes a Int32):
+// ROS2 command to publish a topic to "command" (which takes a Int32):
 // ros2 topic pub /command std_msgs/msg/Int32 "data: 1" --once
 
 AHT20 aht20;
 
-#define LEDSTRIP_DIN 42 // This is the Data in pin for the LEDs, and should not be changed
+#define LEDSTRIP_DIN 42  // This is the Data in pin for the LEDs, and should not be changed
+
+#define EXECUTE_EVERY_N_MS(MS, X) \
+  do { \
+    static volatile int64_t init = -1; \
+    if (init == -1) { init = uxr_millis(); } \
+    if (uxr_millis() - init > MS) { \
+      X; \
+      init = uxr_millis(); \
+    } \
+  } while (0)
 
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(29, 5, LEDSTRIP_DIN,
                                                NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
@@ -91,9 +91,11 @@ uint32_t command = 0;
 
 bool showTemperature = true;
 bool toggleModeActive = true;
+bool rosErrorReset = false;
 
 uint16_t connectionDot = matrix.Color(0, 0, 255);
 uint16_t commandDot = matrix.Color(255, 0, 255);
+uint16_t errorDot = matrix.Color(0, 0, 0);
 
 const uint16_t updateDotOnColor = matrix.Color(255, 255, 255);
 const uint16_t updateDotOffColor = matrix.Color(0, 0, 0);
@@ -102,31 +104,41 @@ bool updateDotOnState = true;
 
 rcl_publisher_t temp_publisher, hum_publisher;
 rcl_subscription_t subscriber;
-std_msgs__msg__Int32 hum_msg, command_msg;
+
+std_msgs__msg__Int32 command_msg;
+
 sensor_msgs__msg__Temperature sensorMsgTemp;
+sensor_msgs__msg__RelativeHumidity sensorMsgHum;
+
 rclc_support_t support;
 rcl_allocator_t allocator;
 rclc_executor_t executor;
 rcl_node_t node;
+TaskHandle_t rosTaskPublisher;
+
 
 bool microRosConnected = false;
 
-void error_loop()
-{
-  while (1)
-  {
+enum states {
+  WAITING_AGENT,
+  AGENT_AVAILABLE,
+  AGENT_CONNECTED,
+  AGENT_DISCONNECTED
+} state;
+
+void error_loop() {
+  while (!rosErrorReset) {
     //    digitalWrite(LED_PIN, !digitalRead(LED_PIN));
-    connectionDot = matrix.Color(255, 0, 0);
+    errorDot = matrix.Color(255, 0, 0);
     delay(500);
-    connectionDot = matrix.Color(0, 0, 0);
+    errorDot = matrix.Color(0, 0, 0);
     delay(500);
   }
 }
 
-void vInitMicroROS()
-{
+bool vCreateMicroRosEntities() {
 
-  set_microros_wifi_transports("robot-lan", "robot-lan-2024!", "10.10.45.40", 8888);
+  rosErrorReset = false;
 
   allocator = rcl_get_default_allocator();
 
@@ -137,22 +149,72 @@ void vInitMicroROS()
   RCCHECK(rclc_node_init_default(&node, "micro_ros_tinyt_29x5_node", "", &support));
 
   RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
+
+  // create publisher
+  RCCHECK(rclc_publisher_init_best_effort(
+    &temp_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Temperature),
+    "temperature"));
+
+  RCCHECK(rclc_publisher_init_best_effort(
+    &hum_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, RelativeHumidity),
+    "humidity"));
+
+  // create subscriber
+  const char *topic_name = "command";
+
+  RCCHECK(rclc_subscription_init_default(
+    &subscriber,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+    topic_name));
+
+  // create executor
+  RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
+  RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &command_msg, &subscription_callback, ON_NEW_DATA));
+
+  return true;
 }
 
-void vTaskupdateTemperatureAndHumidity(void *pvParameters)
-{
+void vDestroyMicroRosEntities() {
+
+  vTaskDelete(rosTaskPublisher);
+
+  rcl_publisher_fini(&temp_publisher, &node);
+  rcl_publisher_fini(&hum_publisher, &node);
+  rcl_subscription_fini(&subscriber, &node);
+  rclc_executor_fini(&executor);
+  rcl_node_fini(&node);
+  rclc_support_fini(&support);
+
+  rosErrorReset = true;
+}
+
+void vTaskupdateTemperatureAndHumidity(void *pvParameters) {
 
   TickType_t xLastWakeTime;
-  Wire.begin(6, 7); // Join I2C bus for AHT20 (SDA 6 and SCL 7)
+  Wire.begin(6, 7);  // Join I2C bus for AHT20 (SDA 6 and SCL 7)
 
   xLastWakeTime = xTaskGetTickCount();
-  while (true)
-  {
+  while (true) {
     temperature = aht20.getTemperature();
     humidity = aht20.getHumidity();
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(5000));
     if (toggleModeActive)
       showTemperature = !showTemperature;
+  }
+}
+
+void vTaskupdateDisplayDot(void *pvParameters) {
+
+  TickType_t xLastWakeTime;
+
+  xLastWakeTime = xTaskGetTickCount();
+  while (true) {
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
 
     if (updateDotOnState)
       updateDot = updateDotOnColor;
@@ -163,182 +225,159 @@ void vTaskupdateTemperatureAndHumidity(void *pvParameters)
   }
 }
 
-void vTaskupdateMatrix(void *pvParameters)
-{
+void vTaskupdateMatrix(void *pvParameters) {
 
   TickType_t xLastWakeTime;
 
   matrix.begin();
-  matrix.setBrightness(20);  // Turn down brightness to about 50%
-  matrix.setFont(&TomThumb); // TomThumb font (3x5 pixels)
+  matrix.setBrightness(20);   // Turn down brightness to about 50%
+  matrix.setFont(&TomThumb);  // TomThumb font (3x5 pixels)
 
   xLastWakeTime = xTaskGetTickCount();
-  while (true)
-  {
-    matrix.fillScreen(0);   // Erase pixel status
-    matrix.setCursor(3, 5); // Set start position
+  while (true) {
+    matrix.fillScreen(0);    // Erase pixel status
+    matrix.setCursor(3, 5);  // Set start position
     matrix.setTextColor(matrix.Color(255, 255, 255));
 
-    if (showTemperature == true)
-    {
-      if (temperature < 0.0)
-      {
+    if (showTemperature == true) {
+      if (temperature > 0.0) {
+        matrix.print(" ");  // add space. Temperatures lower than  0.0 will add a "-"
+      }
+      if (temperature < 0.0) {
         matrix.setTextColor(matrix.Color(0, 0, 255));
-      }
-      else if (temperature < 25.0)
-      {
+      } else if (temperature < 25.0) {
         matrix.setTextColor(matrix.Color(0, 255, 0));
-      }
-      else if (temperature >= 25.0)
-      {
+      } else if (temperature >= 25.0) {
         matrix.setTextColor(matrix.Color(255, 0, 0));
       }
-      matrix.print(temperature, 2);
+      matrix.print(temperature, 1);
 
+      matrix.setTextColor(matrix.Color(255, 255, 255));
       matrix.print(" C");
-    }
-    else
-    {
-      matrix.print(humidity, 0);
-      matrix.print(" RH %");
+    } else {
+      matrix.print(humidity, 1);
+      matrix.print(" % ");
     }
 
-    matrix.drawPixel(28, 0, commandDot);
-    matrix.drawPixel(28, 1, updateDot);
-    matrix.drawPixel(28, 2, connectionDot);
+    matrix.drawPixel(28, 0, connectionDot);
+    matrix.drawPixel(28, 1, commandDot);
+    matrix.drawPixel(28, 2, updateDot);
+    matrix.drawPixel(28, 4, errorDot);
 
-    matrix.show(); // Update matrix
-    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(40));
+    matrix.show();  // Update matrix
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
   }
 }
 
-void vTaskRosPublisher(void *pvParameters)
-{
+void vTaskRosPublisher(void *pvParameters) {
 
   TickType_t xLastWakeTime;
 
-  // create publisher
-  RCCHECK(rclc_publisher_init_best_effort(
-      &temp_publisher,
-      &node,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Temperature),
-      "temperature"));
-
-  RCCHECK(rclc_publisher_init_best_effort(
-      &hum_publisher,
-      &node,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-      "humidity"));
-
-  hum_msg.data = 0;
-
-  connectionDot = matrix.Color(0, 255, 0);
+  sensorMsgHum.relative_humidity = 0;
 
   xLastWakeTime = xTaskGetTickCount();
 
-  while (true)
-  {
+  while (true) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(5000));
-    if (microRosConnected)
-    {
-      hum_msg.data = humidity * 100;
+    if (state == AGENT_CONNECTED) {
+      sensorMsgHum.relative_humidity = humidity;// * 100;
 
       sensorMsgTemp.temperature = temperature;
 
       // Publish to the topic here
       RCSOFTCHECK(rcl_publish(&temp_publisher, &sensorMsgTemp, NULL));
-      RCSOFTCHECK(rcl_publish(&hum_publisher, &hum_msg, NULL));
-      connectionDot = matrix.Color(0, 255, 0);
+      RCSOFTCHECK(rcl_publish(&hum_publisher, &sensorMsgHum, NULL));
     }
   }
 }
 
-void vTaskRosConnectionCheck(void *pvParameters)
-{
+void vTaskRos(void *pvParameters) {
 
   TickType_t xLastWakeTime;
 
+
   xLastWakeTime = xTaskGetTickCount();
 
-  while (true)
-  {
-    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(300));
-    if (rmw_uros_ping_agent(100, 2) == RMW_RET_OK)
-    {
-      connectionDot = matrix.Color(0, 255, 0);
-      microRosConnected = true;
-    }
-    else
-    {
-      connectionDot = matrix.Color(255, 0, 0);
-      microRosConnected = false;
+  while (true) {
+    switch (state) {
+      case WAITING_AGENT:
+        EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+        connectionDot = matrix.Color(255, 255, 0);
+        break;
+      case AGENT_AVAILABLE:
+        state = (true == vCreateMicroRosEntities()) ? AGENT_CONNECTED : WAITING_AGENT;
+        if (state == WAITING_AGENT) {
+          vDestroyMicroRosEntities();
+        };
+        connectionDot = matrix.Color(0, 255, 255);
+
+        break;
+      case AGENT_CONNECTED:
+        EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+        if (state == AGENT_CONNECTED) {
+          rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+          connectionDot = matrix.Color(0, 255, 0);
+        }      
+        break;
+      case AGENT_DISCONNECTED:
+        vDestroyMicroRosEntities();
+        state = WAITING_AGENT;
+        connectionDot = matrix.Color(255, 0, 0);
+        break;
+      default:
+        break;
     }
   }
 }
 
 // Subscriber message cb
 //  This callback will probably run in the current "loop"-task
-void subscription_callback(const void *msgin)
-{
+void subscription_callback(const void *msgin) {
   const std_msgs__msg__Int32 *msg = (const std_msgs__msg__Int32 *)msgin;
 
   printf("Received command: %d\n", msg->data);
 
   command = msg->data;
-  switch (command)
-  {
-  case 0:
-    commandDot = matrix.Color(255, 0, 255);
-    toggleModeActive = true;
-    break;
-  case 1:
-    commandDot = matrix.Color(255, 255, 0);
-    toggleModeActive = false;
-    showTemperature = true;
-    break;
-  case 2:
-    commandDot = matrix.Color(0, 255, 255);
-    toggleModeActive = false;
-    showTemperature = false;
-    break;
-  default:
-    commandDot = matrix.Color(255, 0, 255);
-    toggleModeActive = true;
-    break;
+  switch (command) {
+    case 0:
+      commandDot = matrix.Color(255, 0, 255);
+      toggleModeActive = true;
+      rosErrorReset = true;
+      break;
+    case 1:
+      commandDot = matrix.Color(255, 255, 0);
+      toggleModeActive = false;
+      showTemperature = true;
+      break;
+    case 2:
+      commandDot = matrix.Color(0, 255, 255);
+      toggleModeActive = false;
+      showTemperature = false;
+      break;
+    default:
+      commandDot = matrix.Color(255, 0, 255);
+      toggleModeActive = true;
+      break;
   }
 }
 
-void vInitSubscriber()
-{
-  // create subscriber
-  const char *topic_name = "command";
+void setup() {
 
-  RCCHECK(rclc_subscription_init_default(
-      &subscriber,
-      &node,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-      topic_name));
+  xTaskCreatePinnedToCore(vTaskupdateTemperatureAndHumidity, "getSensorData", 2048, NULL, 5, NULL, 1);
+  xTaskCreatePinnedToCore(vTaskupdateDisplayDot, "updateDisplayDot", 2048, NULL, 5, NULL, 1);
+  xTaskCreatePinnedToCore(vTaskupdateMatrix, "updateMatrix", 4096, NULL, 10, NULL, 1);
 
-  // create executor
-  RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
-  RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &command_msg, &subscription_callback, ON_NEW_DATA));
+
+  set_microros_wifi_transports("robot-lan", "robot-lan-2024!", "10.2.50.40", 8888);
+  //set_microros_transports();
+
+  state = WAITING_AGENT;
+  
+  xTaskCreatePinnedToCore(vTaskRos, "uRos", 4096, NULL, 10, NULL, 0);
+
+  xTaskCreatePinnedToCore(vTaskRosPublisher, "uPublisher", 4096, NULL, 10, &rosTaskPublisher, 0);
+
 }
 
-void setup()
-{
-
-  vInitMicroROS();
-
-  vInitSubscriber();
-
-  xTaskCreatePinnedToCore(vTaskRosConnectionCheck, "uRosAlivePublisher", 5000, NULL, 10, NULL, 0);
-  xTaskCreatePinnedToCore(vTaskupdateTemperatureAndHumidity, "getSensorData", 5000, NULL, 5, NULL, 1);
-  xTaskCreatePinnedToCore(vTaskupdateMatrix, "updateMatrix", 5000, NULL, 10, NULL, 1);
-  xTaskCreatePinnedToCore(vTaskRosPublisher, "uTemperaturePublisher", 5000, NULL, 10, NULL, 0);
-}
-
-void loop()
-{
-  delay(100);
-  RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+void loop() {
 }

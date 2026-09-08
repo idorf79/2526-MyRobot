@@ -42,6 +42,25 @@ source install/setup.bash
 ros2 launch open_manipulator_controller arm_controller.launch.py use_sim_time:=true
 ```
 
+### Sending actions to controller directy:
+
+
+#### Gripper
+```bash
+ros2 action send_goal /gripper_control open_manipulator_controller/action/GripperControl "{command: 'open', effort: '2.0'}"
+ros2 action send_goal /gripper_control open_manipulator_controller/action/GripperControl "{command: 'close', effort: '2.0'}"
+```
+
+
+#### Arm
+```bash
+ros2 action send_goal /move_to_position open_manipulator_controller/action/MoveToPosition "{position_name: 'home', duration: '4.0'}"
+ros2 action send_goal /move_to_position open_manipulator_controller/action/MoveToPosition "{position_name: 'safe', duration: '4.0'}"
+ros2 action send_goal /move_to_position open_manipulator_controller/action/MoveToPosition "{position_name: 'zero', duration: '4.0'}"
+ros2 action send_goal /move_to_position open_manipulator_controller/action/MoveToPosition "{position_name: 'pick_left', duration: '4.0'}"
+
+```
+
 ### Start client
 
 ```bash
