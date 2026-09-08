@@ -193,9 +193,6 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-
->>>> DONE UNTIL HERE <<<<
-
 1. Install Zenoh
 
 ```bash
@@ -214,23 +211,42 @@ sudo apt install zenoh-bridge-ros2dds ros-jazzy-rmw-cyclonedds-cpp
 echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> $HOME/.bashrc
 ```
 
+Everything up till here has been released in: '260908_REnS_VirtualBox.ova'
 
-1. Make the disks as small as possible
+## TODO
+
+This section describes what still needs to be done.
+
+## Releasing the VirtualBox
+
+1. Make the disks as small as possible.
+
+Inside the Virtual Machine:
 
 ```bash
-dd if=/dev/zero of=/zerofile bs=1M status=progress
-rm -f /zerofile
+sudo dd if=/dev/zero of=/zerofile bs=1M status=progress
+sudo rm -f /zerofile
 
 sudo shutdown -h now
 ```
 
-1. On host machine
+1. Compact the Virtual Box disk.
+
+On the host machine:
 
 ```powershell
 cd C:\VM\2627-REnSDev
 & "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" modifymedium disk "C:\VM\2627-REnSDev\2627-REnSDev.vdi" --compact
 ```
 
+1. Export the Virtual Machine as Appliance
+
+In VirtualBox: File -> Export Appliance
+Select the correct VirtualMachine ("2627-REnSDev"). Select the correct "File" in "Format Settings", for example: "C:\VM\260908_REnS_VirtualBox.ova".
+Under "Appliance Settings", set a version. For example: "260809".
+Click "Finish"
+
+You now should have an Appliance which you can share :) 
 
 
 TODO:
